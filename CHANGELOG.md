@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > [!TIP]
 > Knote (知音) is a fork of Nora by Sandakan. Everything before 4.0.0 is Nora's history — see the upstream repository for those release notes.
 
+## [4.1.3] - 2026-11-06
+
+### Fixed
+
+- Fixed NetEase playback failing with the "无法播放歌曲 ERROR: -460" dialog on every song: the player-URL endpoint (`song_url_v1`) lost its `xeapi` channel argument in the 4.1.2 protocol-core port and went out through plain `eapi`, which NetEase risk-controls with business code -460 for logged-in accounts. The request now goes through the android `xeapi` channel like upstream SPlayer-Next, with a regression test pinning the channel.
+
 ## [4.1.2] - 2026-11-06
 
 ### Fixed
