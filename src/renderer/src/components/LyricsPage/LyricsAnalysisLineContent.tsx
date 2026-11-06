@@ -135,6 +135,10 @@ const LyricsAnalysisLineContent = (props: Props) => {
               // Clicking a token must not seek the line, which is the default line behaviour.
               event.stopPropagation();
               onTokenClick(token, analysis as LyricsAnalysisLine);
+              // Release the focus the click gave the span, so the next Space reaches the global
+              // play/pause shortcut instead of re-triggering this token (same idiom as the
+              // shared Button's removeFocusOnClick). Keyboard activation keeps focus on purpose.
+              event.currentTarget.blur();
             }}
             onKeyDown={(event) => {
               if (event.key !== 'Enter' && event.key !== ' ') return;
