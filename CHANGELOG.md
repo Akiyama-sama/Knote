@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > [!TIP]
 > Knote (知音) is a fork of Nora by Sandakan. Everything before 4.0.0 is Nora's history — see the upstream repository for those release notes.
 
+## [4.1.2] - 2026-11-06
+
+### Fixed
+
+- Fixed NetEase QR login being blocked with the "当前设备环境异常，本次操作已拦截" risk-control message: the NeteaseCloudMusicApi npm package is replaced with an in-process protocol core (ported from SPlayer-Next, AGPL-3.0) that sends every request with a coherent device fingerprint — a stable persisted `deviceId`, a `MUSIC_A` guest token minted through the anti-crawler registration channel with retry, and consistent `os`/`appver`/`channel`/`User-Agent` values. Catalog and lyrics calls now also run under a guest identity while logged out.
+
 ## [4.1.1] - 2026-10-24
 
 ### Fixed
