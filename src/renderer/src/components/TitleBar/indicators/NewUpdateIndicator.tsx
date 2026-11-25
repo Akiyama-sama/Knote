@@ -14,39 +14,18 @@ const NewUpdateIndicator = () => {
   const { changePromptMenuData } = useContext(AppUpdateContext);
   const { t } = useTranslation();
 
+  // Update checks are silent: the indicator only appears when there actually is
+  // a newer version, never while checking or when the app is already up to date.
+  if (appUpdatesState !== 'OLD') return null;
+
   return (
-    <>
-      {!(appUpdatesState === 'UNKNOWN') && (
-        <Button
-          className={`new-update-indicator bg-background-color-2 hover:text-font-color-highlight dark:bg-dark-background-color-2 dark:hover:text-dark-font-color-highlight !mr-1 flex cursor-pointer items-center justify-center rounded-md !border-0 !px-3 !py-1 text-center outline-offset-1 transition-[background] focus-visible:!outline ${
-            appUpdatesState === 'LATEST' && 'hidden'
-          }`}
-          iconClassName="material-icons-round-outlined"
-          iconName={
-            appUpdatesState === 'OLD'
-              ? 'download'
-              : appUpdatesState === 'LATEST'
-                ? 'download_done'
-                : appUpdatesState === 'CHECKING'
-                  ? 'sync'
-                  : 'warning'
-          }
-          tooltipLabel={t(
-            appUpdatesState === 'OLD'
-              ? 'common.newUpdateAvailable'
-              : appUpdatesState === 'CHECKING'
-                ? 'common.checkingForUpdates'
-                : appUpdatesState === 'ERROR'
-                  ? 'common.updateCheckError'
-                  : appUpdatesState === 'NO_NETWORK_CONNECTION'
-                    ? 'common.updateCheckErrorNoInternet'
-                    : 'releaseNotesPrompt.latestVersion'
-          )}
-          clickHandler={() => changePromptMenuData(true, <ReleaseNotesPrompt />)}
-          isDisabled={appUpdatesState === 'LATEST'}
-        />
-      )}
-    </>
+    <Button
+      className="new-update-indicator bg-background-color-2 hover:text-font-color-highlight dark:bg-dark-background-color-2 dark:hover:text-dark-font-color-highlight !mr-1 flex cursor-pointer items-center justify-center rounded-md !border-0 !px-3 !py-1 text-center outline-offset-1 transition-[background] focus-visible:!outline"
+      iconClassName="material-icons-round-outlined"
+      iconName="download"
+      tooltipLabel={t('common.newUpdateAvailable')}
+      clickHandler={() => changePromptMenuData(true, <ReleaseNotesPrompt />)}
+    />
   );
 };
 
