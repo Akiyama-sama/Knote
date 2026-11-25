@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > [!TIP]
 > Knote (知音) is a fork of Nora by Sandakan. Everything before 4.0.0 is Nora's history — see the upstream repository for those release notes.
 
+## [4.1.4] - 2026-11-25
+
+### Fixed
+
+- Update checks are now silent: the native dialogs on startup are gone, including the one shown when the app is already up to date. A newer version is signalled only by the update indicator in the title bar, and the release notes prompt no longer opens by itself.
+- Fixed in-app update downloads failing with a 404: artifact names contained a space, which GitHub stores as a dot while `latest*.yml` referenced a dash. Artifact names are now space-free, so the updater downloads the file that was actually published.
+- Windows and Linux updates now download in the background and install when the app quits. macOS keeps the silent check and the title-bar indicator but stays on manual downloads, since Squirrel.Mac cannot install unsigned builds.
+
 ## [4.1.3] - 2026-11-06
 
 ### Fixed
