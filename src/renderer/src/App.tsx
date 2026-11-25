@@ -230,11 +230,8 @@ export default function App() {
   // ? UP NEXT POPUP TRIGGER
   const { registerUpNextPopupFn, showUpNextSongPopup } = useUpNextPopup();
   // ? INITIALIZE APP UPDATES
-  // App updates hook handles checking for updates and showing release notes
-  const { updateAppUpdatesState } = useAppUpdates({
-    changePromptMenuData,
-    isOnline
-  });
+  // App updates hook checks for updates silently; only the title bar indicator reacts
+  const { updateAppUpdatesState } = useAppUpdates({ isOnline });
 
   const fetchSongFromUnknownSource = useCallback(
     (songPath: string) => {
