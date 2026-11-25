@@ -1,25 +1,12 @@
 import { useCallback, useEffect } from 'react';
-import { lazy } from 'react';
 
 import { releaseNotes, version } from '../../../../package.json';
 import { store } from '../store/store';
 import isLatestVersion from '../utils/isLatestVersion';
-import storage from '../utils/localStorage';
-import log from '../utils/log';
 import { parseChangelog } from '../utils/parseChangelog';
-
-const ReleaseNotesPrompt = lazy(
-  () => import('../components/ReleaseNotesPrompt/ReleaseNotesPrompt')
-);
 
 /** Dependencies required by the useAppUpdates hook. */
 export interface AppUpdatesDependencies {
-  /** Function to show/hide prompt menu with content */
-  changePromptMenuData: (
-    isVisible?: boolean,
-    prompt?: React.ReactNode | null,
-    className?: string
-  ) => void;
   /** Whether the app is currently online */
   isOnline: boolean;
 }
@@ -33,10 +20,12 @@ export interface AppUpdatesDependencies {
  * - Periodically checks for updates (every 15 minutes)
  * - Fetches latest version info from remote changelog
  * - Compares local version with remote version
- * - Shows release notes prompt when update is available
- * - Respects user preference to skip update notifications
  * - Updates app update state in the store
  * - Handles network errors gracefully
+ *
+ * The check is silent: it never opens the release notes by itself. The title bar
+ * update indicator is the only startup-facing signal that an update exists; the
+ * release notes prompt opens when the user clicks that indicator.
  *
  * Update states:
  *
@@ -49,21 +38,18 @@ export interface AppUpdatesDependencies {
  * @example
  *   ```tsx
  *   function App() {
- *     const { updateAppUpdatesState, checkForAppUpdates } = useAppUpdates({
- *       changePromptMenuData,
- *       isOnline
- *     });
+ *     const { updateAppUpdatesState, checkForAppUpdates } = useAppUpdates({ isOnline });
  *
  *     // Manually trigger update check
  *     checkForAppUpdates();
  *   }
  *   ```;
  *
- * @param dependencies - Object containing required callback functions and state
+ * @param dependencies - Object containing the current network state
  * @returns Object with update management functions
  */
 export function useAppUpdates(dependencies: AppUpdatesDependencies) {
-  const { changePromptMenuData, isOnline } = dependencies;
+  const { isOnline } = dependencies;
 
   /**
    * Updates the app update state in the store.
@@ -83,7 +69,7 @@ export function useAppUpdates(dependencies: AppUpdatesDependencies) {
    * Checks for application updates by fetching the remote changelog.
    *
    * Process: 1. Checks if online 2. Fetches remote changelog JSON 3. Compares versions 4. Updates
-   * app state 5. Shows release notes if update available and not ignored
+   * app state. It never opens the release notes prompt; only the title bar indicator reacts.
    */
   const checkForAppUpdates = useCallback(() => {
     if (navigator.onLine) {
@@ -100,26 +86,8 @@ export function useAppUpdates(dependencies: AppUpdatesDependencies) {
 
           updateAppUpdatesState(isThereAnAppUpdate ? 'OLD' : 'LATEST');
 
-          if (isThereAnAppUpdate) {
-            // Check if user has chosen to skip notification for this version
-            const noUpdateNotificationForNewUpdate = storage.preferences.getPreferences(
-              'noUpdateNotificationForNewUpdate'
-            );
-            const isUpdateIgnored = noUpdateNotificationForNewUpdate !== res.latestVersion.version;
-
-            log('client has new updates', {
-              isThereAnAppUpdate,
-              noUpdateNotificationForNewUpdate,
-              isUpdateIgnored
-            });
-
-            // Show release notes prompt if update not ignored
-            if (isUpdateIgnored) {
-              changePromptMenuData(true, <ReleaseNotesPrompt />, 'release-notes px-8 py-4');
-            }
-          } else {
-            console.log('client is up-to-date.');
-          }
+          if (isThereAnAppUpdate) console.log('client has new updates.');
+          else console.log('client is up-to-date.');
 
           return undefined;
         })
@@ -131,7 +99,7 @@ export function useAppUpdates(dependencies: AppUpdatesDependencies) {
       updateAppUpdatesState('NO_NETWORK_CONNECTION');
       console.log(`couldn't check for app updates. Check the network connection.`);
     }
-  }, [changePromptMenuData, updateAppUpdatesState]);
+  }, [updateAppUpdatesState]);
 
   useEffect(
     () => {

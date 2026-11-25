@@ -3,7 +3,11 @@ productName: Knote
 executableName: Knote
 copyright: Copyright © 2022-2026 Akiyama
 icon: ./build/icon.ico
-artifactName: '${productName} v${version}-${os}-${arch}.${ext}'
+# Keep artifact names free of spaces. GitHub rewrites spaces to dots when uploading,
+# while electron-builder writes spaces as dashes into latest*.yml, so an artifact
+# name like "Knote v4.1.3-mac-arm64.zip" ends up as "Knote.v4.1.3-..." on GitHub but
+# "Knote-v4.1.3-..." in latest-mac.yml — the in-app updater then downloads a 404.
+artifactName: '${productName}-v${version}-${os}-${arch}.${ext}'
 
 extraMetadata:
   description: Knote — 知音, an elegant music player

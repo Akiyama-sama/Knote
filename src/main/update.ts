@@ -1,64 +1,59 @@
-// import logger from './logger';
-import { dialog } from 'electron';
-/* eslint-disable promise/catch-or-return */
+import { app } from 'electron';
 import electronUpdater from 'electron-updater';
-// import { IS_DEVELOPMENT } from './main';
 
-// export default async function checkForUpdates() {
-//   electronUpdater.autoUpdater.logger = {
-//     info: (mes) => logger.info(mes),
-//     warn: (mes) => logger.warn(mes),
-//     error: (mes) => logger.error(mes),
-//     debug: (mes) => logger.debug(mes)
-//   };
-//   electronUpdater.autoUpdater.autoDownload = false;
-//   // electronUpdater.autoUpdater.forceDevUpdateConfig = IS_DEVELOPMENT;
+import logger from './logger';
 
-//   const result = await electronUpdater.autoUpdater.checkForUpdatesAndNotify();
+const { autoUpdater } = electronUpdater;
 
-//   return result;
-// }
+// Update checks are silent: no startup dialog, not even when the app is already
+// up to date. When a new version exists the renderer shows the update indicator
+// in the title bar. On Windows/Linux the update is downloaded in the background
+// and installed the next time the app quits.
+//
+// macOS is excluded: Squirrel.Mac only installs updates signed with a Developer
+// ID, and this build is unsigned, so an automatic download would only waste
+// bandwidth and then fail at install time. Mac users get the indicator and the
+// release notes prompt instead, and update manually.
+const CAN_AUTO_UPDATE = process.platform !== 'darwin';
 
-electronUpdater.autoUpdater.autoDownload = false;
+autoUpdater.autoDownload = CAN_AUTO_UPDATE;
+autoUpdater.autoInstallOnAppQuit = CAN_AUTO_UPDATE;
 
-electronUpdater.autoUpdater.on('error', (error) => {
-  dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
+autoUpdater.on('error', (error) => {
+  logger.error(
+    'Failed to check for or download an app update.',
+    {},
+    error == null ? 'unknown' : error
+  );
 });
 
-electronUpdater.autoUpdater.on('update-available', () => {
-  dialog
-    .showMessageBox({
-      type: 'info',
-      title: 'Found Updates',
-      message: 'Found updates, do you want update now?',
-      buttons: ['Sure', 'No']
-    })
-    .then((buttonIndex) => {
-      if (buttonIndex.response === 0) {
-        electronUpdater.autoUpdater.downloadUpdate();
-      }
-    });
+autoUpdater.on('update-available', (info) => {
+  logger.info(
+    CAN_AUTO_UPDATE
+      ? 'App update available. Downloading it in the background.'
+      : 'App update available. Automatic install is unsupported on this platform.',
+    { version: info?.version, willAutoDownload: CAN_AUTO_UPDATE }
+  );
 });
 
-electronUpdater.autoUpdater.on('update-not-available', () => {
-  dialog.showMessageBox({
-    title: 'No Updates',
-    message: 'Current version is up-to-date.'
+autoUpdater.on('update-not-available', () => {
+  logger.debug('App is up to date.');
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  logger.info('App update downloaded. It will be installed when the app quits.', {
+    version: info?.version
   });
-});
-
-electronUpdater.autoUpdater.on('update-downloaded', () => {
-  dialog
-    .showMessageBox({
-      title: 'Install Updates',
-      message: 'Updates downloaded, application will be quit for update...'
-    })
-    .then(() => {
-      setImmediate(() => electronUpdater.autoUpdater.quitAndInstall());
-    });
 });
 
 // export this to MenuItem click callback
 export default function checkForUpdates() {
-  electronUpdater.autoUpdater.checkForUpdates();
+  if (!app.isPackaged) {
+    logger.debug('Skipping app update check outside a packaged build.');
+    return;
+  }
+
+  autoUpdater.checkForUpdates().catch((error) => {
+    logger.error('Failed to check for app updates.', {}, error);
+  });
 }
